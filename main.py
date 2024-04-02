@@ -40,7 +40,7 @@ async def check_money(message: types.Message):
             try: 
                 buy = user_money.get(coin[0])
                 for i in range(len(buy)):
-                    all_procent += (coin[1] / buy[i][1] * 100)
+                    all_procent += coin[1] * (buy[i][0] / buy[i][1] * 100) - 100
             except:
                 ...
 
@@ -52,7 +52,7 @@ async def check_money(message: types.Message):
             try:
                 for i in range(len(user_money.get(coin[0]))):
                     um += user_money.get(coin[0])[i][0]
-                page_money += f"<code>{coin[0][:3]}</code> = ${rub * um * coin[1]:.2f} | {um} 🪙 | {all_procent - 100:.2f}%\n" if um is not None else ''
+                page_money += f"<code>{coin[0][:3]}</code> = ${rub * um * coin[1]:.2f} | {um} 🪙 | {all_procent:.2f}%\n" if um is not None else ''
             except:
                 pass
             
@@ -62,7 +62,7 @@ async def check_money(message: types.Message):
         # await mes.edit_text('Вспоминаю твой кошелёк')
         # Считаем кол-во средств в долларах
         # usd_bitcoin = float(f'{bitcoin_value * (float(amount)):.4f}')
-
+        # bitcoin_value * (float(amount) / buy*100-100
         # Вычисляем процент
         # await mes.edit_text('Рассчитываем процент для монет...')
         # procent = usd_bitcoin/buy*100-100
@@ -99,6 +99,33 @@ async def check_money(message: types.Message):
         print(e)
         await message.answer(config.error_mes, parse_mode='HTML')
 
+
+@dp.message_handler(commands=['info'])
+async def buy_money(message: types.Message):
+        mes = await message.answer('⚠️ Запрашиваю данные...')
+        values = func.get_coins()
+        await mes.edit_text('Получил курсы монет')
+
+        user_money = db.get_buy(message.from_user.id)
+        
+        # page_values = ""
+        # for coin in values:
+        #     page_values += f'{coin[0][:3]} | $ {coin[1]}\n'
+
+        rub = func.get_rub()
+
+        await mes.edit_text('Считаю проценты монет')
+        all_procent = 0
+        text = ""
+        for coin in values:
+            try: 
+                buy = user_money.get(coin[0])
+                for i in range(len(buy)):
+                    text += f"{buy[i][1]:.3f} {coin[1] * (buy[i][0] / buy[i][1] * 100)-100:.2f}\n"
+            except:
+                ...
+
+        await message.answer(text)
 
 @dp.message_handler(commands=['buy'])
 async def buy_money(message: types.Message):
