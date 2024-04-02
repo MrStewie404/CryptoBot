@@ -26,7 +26,7 @@ async def check_money(message: types.Message):
         values = func.get_coins()
         await mes.edit_text('Получил курсы монет')
 
-        user_money = db.get_user_money(message.from_user.id)
+        user_money = db.get_buy(message.from_user.id)
         
         page_values = ""
         for coin in values:
@@ -34,14 +34,28 @@ async def check_money(message: types.Message):
 
         rub = func.get_rub()
 
+        await mes.edit_text('Считаю проценты монет')
+        all_procent = 0
+        for coin in values:
+            try: 
+                buy = user_money.get(coin[0])
+                for i in range(len(buy)):
+                    all_procent += (coin[1] / buy[i][1] * 100)
+            except:
+                ...
+
+
         await mes.edit_text('Считаю твои средства')
         page_money = ''
+        um = 0
         for coin in values:
             try:
-                um = user_money.get(coin[0])
-                page_money += f"<code>{coin[0][:3]}</code> = ₽{rub * um * coin[1]:.2f} | {um:.3f} 🪙\n" if um is not None else ''
+                for i in range(len(user_money.get(coin[0]))):
+                    um += user_money.get(coin[0])[i][0]
+                page_money += f"<code>{coin[0][:3]}</code> = ${rub * um * coin[1]:.2f} | {um} 🪙 | {all_procent - 100:.2f}%\n" if um is not None else ''
             except:
                 pass
+            
 
         # Получение баланса пользователя
         # coin, amount, buy = db.get_user_money(message.from_user.id)
@@ -85,6 +99,20 @@ async def check_money(message: types.Message):
         print(e)
         await message.answer(config.error_mes, parse_mode='HTML')
 
+
+@dp.message_handler(commands=['buy'])
+async def buy_money(message: types.Message):
+    try:
+        coin, money, price = message.text.replace('/buy ', '').split(' ')
+        amount = db.get_buy(message.from_user.id)
+        amount.get(coin).append([float(money), float(price)])
+        # print(array)
+        db.add_buy(amount=amount, user_id=message.from_user.id)
+        await message.answer(f'На кошелёк {coin} добавлено {money} с ценой покупки {price}')
+
+    except Exception as e:
+        await message.answer(f'Не удалось обработать команду.\nОшибка: <pre>{e}</pre>\n\nПроверьте правильность сообщения',
+                             parse_mode='HTML')
 
 @dp.message_handler(commands=['help'])
 async def check_money(message: types.Message):

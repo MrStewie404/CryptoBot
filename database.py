@@ -24,5 +24,13 @@ class ORM:
         return self.conn.commit()
     
     def add_cource(self, coin, amount):
-        self.cursor.execute(f'INSERT INTO values (`time`, `amount`) VALUES (?,?)', (coin, amount))
+        self.cursor.execute(f'INSERT INTO values (`time`, `amount`) VALUES (?,?)', (coin, amount,))
         return self.conn.commit()
+    
+    def add_buy(self, amount, user_id):
+        self.cursor.execute(f'UPDATE users SET buy = ? WHERE user_id = ?', (json.dumps(amount), user_id,))
+        return self.conn.commit()
+
+    def get_buy(self, user_id) -> dict:
+        result = self.cursor.execute(f'SELECT buy FROM users WHERE user_id = ?', (user_id,)).fetchone()[0]
+        return json.loads(result)
